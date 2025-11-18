@@ -1,8 +1,8 @@
 {
-  "name": "rococo-sample-vue3",
+  "name": "rococo-todo-vue3",
   "version": "0.0.3",
   "description": "A sample frontend application for a Rococo based backend",
-  "productName": "Rococo Sample App",
+  "productName": "Rococo Todo App",
   "author": "asymness <asym1999@gmail.com>, Axel <axelpcxs3@gmail.com>",
   "type": "module",
   "private": true,
