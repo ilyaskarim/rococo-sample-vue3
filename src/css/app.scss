@@ -1,1 +1,15 @@
 // app global css in SCSS form
+
+// Enhanced focus styles for buttons
+.q-btn:focus-visible {
+  outline: 2px solid #1976D2;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px white,0 0 0 4px rgba(25, 118, 210, 0.2);
+}
+
+// Ensure focus ring is visible for all button variants
+.q-btn--outline:focus-visible {
+  outline: 2px solid #1976D2;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px white,0 0 0 4px rgba(25, 118, 210, 0.2);
+}
