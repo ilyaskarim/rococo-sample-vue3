@@ -31,10 +31,6 @@
               {{ errorMessage }}
             </div>
 
-            <div v-if="successMessage" class="text-positive q-mb-md">
-              {{ successMessage }}
-            </div>
-
             <div class="row q-gutter-sm justify-end">
               <q-btn
                 label="Cancel"
@@ -61,6 +57,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from 'stores/auth'
 import { useRouter } from 'vue-router'
+import { Notify } from 'quasar'
 import userService from 'src/services/user.service'
 
 const authStore = useAuthStore()
@@ -73,7 +70,6 @@ const formData = ref({
 
 const loading = ref(false)
 const errorMessage = ref('')
-const successMessage = ref('')
 
 onMounted(() => {
   // Initialize form with current user data
@@ -86,7 +82,6 @@ onMounted(() => {
 const onSubmit = async () => {
   loading.value = true
   errorMessage.value = ''
-  successMessage.value = ''
 
   try {
     const response = await userService.updateProfile({
@@ -97,12 +92,12 @@ const onSubmit = async () => {
     // Update the auth store with the new user data
     if (response.person) {
       authStore.updateUser(response.person)
-      successMessage.value = 'Profile updated successfully!'
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        successMessage.value = ''
-      }, 3000)
+      Notify.create({
+        message: 'Profile updated successfully!',
+        color: 'positive',
+        position: 'top',
+        timeout: 3000,
+      })
     }
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Failed to update profile. Please try again.'
@@ -118,7 +113,6 @@ const onCancel = () => {
     formData.value.last_name = authStore.user.last_name || ''
   }
   errorMessage.value = ''
-  successMessage.value = ''
   router.push('/')
 }
 </script>
