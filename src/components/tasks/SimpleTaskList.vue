@@ -1,7 +1,7 @@
 <template>
   <q-card flat bordered class="bg-grey-1">
     <!-- Task List -->
-    <q-list v-if="tasks.length > 0" separator>
+    <q-list v-if="tasks.length > 0" separator style="height: calc(100vh - 250px); overflow-y: auto;" >
       <q-item
         v-for="task in tasks"
         :key="task.entity_id"

@@ -26,6 +26,8 @@
       bordered
       :rows-per-page-options="[10, 25, 50]"
       :pagination="{ rowsPerPage: 10 }"
+      class="my-sticky-header-table"
+
     >
       <!-- Loading slot -->
       <template v-slot:loading>
@@ -250,3 +252,24 @@ function handleFilterChange(value) {
   emit('change-filter', value)
 }
 </script>
+
+<style scoped>
+:deep(.my-sticky-header-table .q-table__middle) {
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+}
+
+:deep(.my-sticky-header-table thead) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: white;
+}
+
+:deep(.my-sticky-header-table thead th) {
+  background-color: white;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+</style>
