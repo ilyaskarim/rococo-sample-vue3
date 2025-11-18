@@ -24,10 +24,33 @@
       <q-card-section>
         <q-form @submit.prevent="onSubmit" class="full-width">
           <!-- First name -->
-          <q-input v-model="firstName" type="text" label="First name" outlined class="q-mb-lg" />
+          <q-input
+            v-model="firstName"
+            type="text"
+            label="First name"
+            outlined
+            class="q-mb-lg"
+            :error="!!firstNameError"
+            :error-message="firstNameError"
+            @blur="validateFirstName"
+            @update:model-value="firstNameError = ''"
+            :disable="signupLoading"
+            autofocus
+          />
 
           <!-- Last name -->
-          <q-input v-model="lastName" type="text" label="Last name" outlined class="q-mb-lg" />
+          <q-input
+            v-model="lastName"
+            type="text"
+            label="Last name"
+            outlined
+            class="q-mb-lg"
+            :error="!!lastNameError"
+            :error-message="lastNameError"
+            @blur="validateLastName"
+            @update:model-value="lastNameError = ''"
+            :disable="signupLoading"
+          />
 
           <!-- E-mail address -->
           <q-input
@@ -36,6 +59,11 @@
             label="E-mail address"
             outlined
             class="q-mb-xl"
+            :error="!!emailError"
+            :error-message="emailError"
+            @blur="validateEmail"
+            @update:model-value="emailError = ''"
+            :disable="signupLoading"
           />
 
           <!-- Signup Button -->
@@ -45,6 +73,7 @@
             type="submit"
             class="full-width"
             :loading="signupLoading"
+            :disable="signupLoading"
           />
 
           <!-- Divider (only show if OAuth is available) -->
@@ -103,6 +132,10 @@ const firstName = ref('')
 const lastName = ref('')
 const emailAddress = ref('')
 
+const firstNameError = ref('')
+const lastNameError = ref('')
+const emailError = ref('')
+
 const successDialog = ref(false)
 const signupLoading = ref(false)
 const googleLoading = ref(false)
@@ -124,20 +157,83 @@ const hasOAuthProviders = computed(() => {
   return hasGoogleProvider.value || hasMicrosoftProvider.value
 })
 
-// Placeholder login function
+// First name validation
+function validateFirstName() {
+  if (!firstName.value || firstName.value.trim() === '') {
+    firstNameError.value = 'First name is required'
+    return false
+  }
+
+  if (firstName.value.trim().length < 2) {
+    firstNameError.value = 'First name must be at least 2 characters'
+    return false
+  }
+
+  firstNameError.value = ''
+  return true
+}
+
+// Last name validation
+function validateLastName() {
+  if (!lastName.value || lastName.value.trim() === '') {
+    lastNameError.value = 'Last name is required'
+    return false
+  }
+
+  if (lastName.value.trim().length < 2) {
+    lastNameError.value = 'Last name must be at least 2 characters'
+    return false
+  }
+
+  lastNameError.value = ''
+  return true
+}
+
+// Email validation
+function validateEmail() {
+  if (!emailAddress.value) {
+    emailError.value = 'Email is required'
+    return false
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(emailAddress.value)) {
+    emailError.value = 'Please enter a valid email address'
+    return false
+  }
+
+  emailError.value = ''
+  return true
+}
+
+// Validate all fields
+function validateForm() {
+  const isFirstNameValid = validateFirstName()
+  const isLastNameValid = validateLastName()
+  const isEmailValid = validateEmail()
+  return isFirstNameValid && isLastNameValid && isEmailValid
+}
+
+// Signup function
 async function onSubmit() {
+  if (!validateForm()) {
+    return
+  }
+
   signupLoading.value = true
 
-  let success = await authStore.signup({
-    first_name: firstName.value,
-    last_name: lastName.value,
-    email_address: emailAddress.value,
-  })
+  try {
+    const success = await authStore.signup({
+      first_name: firstName.value.trim(),
+      last_name: lastName.value.trim(),
+      email_address: emailAddress.value.trim(),
+    })
 
-  signupLoading.value = false
-
-  if (success) {
-    successDialog.value = true
+    if (success) {
+      successDialog.value = true
+    }
+  } finally {
+    signupLoading.value = false
   }
 }
 

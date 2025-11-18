@@ -16,9 +16,13 @@
             type="password"
             label="Password"
             outlined
-            class="q-mb-lg"
+            class="q-mb-sm"
             :rules="passwordRules"
+            :disable="loading"
           />
+
+          <!-- Password Strength Indicator -->
+          <PasswordStrength :password="password" />
 
           <!-- Confirm Password -->
           <q-input
@@ -28,11 +32,19 @@
             outlined
             lazy-rules
             :rules="confirmPasswordRules"
-            class="q-mb-lg"
+            class="q-mb-lg q-mt-md"
+            :disable="loading"
           />
 
           <!-- Set password Button -->
-          <q-btn label="Set password" color="primary" type="submit" class="full-width" />
+          <q-btn
+            label="Set password"
+            color="primary"
+            type="submit"
+            class="full-width"
+            :loading="loading"
+            :disable="loading"
+          />
         </q-form>
       </q-card-section>
     </q-card>
@@ -40,9 +52,10 @@
 </template>
   
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from 'stores/auth'
+import PasswordStrength from '@/components/PasswordStrength.vue'
 
 const route = useRoute()
 const authStore = useAuthStore()
@@ -52,22 +65,54 @@ const uidb64 = route.params.uidb64
 
 const password = ref('')
 const passwordConfirm = ref('')
+const loading = ref(false)
 
+// Password validation rules
 const passwordRules = [
   (v) => !!v || 'Password is required',
-  (v) => v.length >= 8 || 'Min 8 characters',
+  (v) => v.length >= 8 || 'Password must be at least 8 characters',
 ]
 
-const confirmPasswordRules = [(v) => v === password.value || 'Passwords do not match.']
+const confirmPasswordRules = [
+  (v) => !!v || 'Please confirm your password',
+  (v) => v === password.value || 'Passwords do not match',
+]
 
-onMounted(() => {
-  console.log('mounted')
+// Check if password is strong enough (at least 3 requirements met)
+const isPasswordStrong = computed(() => {
+  if (!password.value) return false
+
+  let strengthCount = 0
+  if (password.value.length >= 8) strengthCount++
+  if (/[A-Z]/.test(password.value)) strengthCount++
+  if (/[a-z]/.test(password.value)) strengthCount++
+  if (/\d/.test(password.value)) strengthCount++
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(password.value)) strengthCount++
+
+  return strengthCount >= 3
 })
-// Placeholder login function
+
+// Set password function
 async function onSubmit() {
-  await authStore.setPassword(token, uidb64, {
-    password: password.value,
-  })
+  if (!isPasswordStrong.value) {
+    authStore.showErrorNotification('Please use a stronger password (at least 3 requirements met)')
+    return
+  }
+
+  if (password.value !== passwordConfirm.value) {
+    authStore.showErrorNotification('Passwords do not match')
+    return
+  }
+
+  loading.value = true
+
+  try {
+    await authStore.setPassword(token, uidb64, {
+      password: password.value,
+    })
+  } finally {
+    loading.value = false
+  }
 }
 </script>
   

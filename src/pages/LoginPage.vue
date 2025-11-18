@@ -8,7 +8,19 @@
       <q-card-section>
         <q-form @submit.prevent="onSubmit" class="full-width">
           <!-- Email -->
-          <q-input v-model="email" type="email" label="Email" outlined class="q-mb-lg" />
+          <q-input
+            v-model="email"
+            type="email"
+            label="Email"
+            outlined
+            class="q-mb-lg"
+            :error="!!emailError"
+            :error-message="emailError"
+            @blur="validateEmail"
+            @update:model-value="emailError = ''"
+            :disable="loading"
+            autofocus
+          />
 
           <!-- Password -->
           <q-input
@@ -18,6 +30,11 @@
             aria-autocomplete="current-password"
             outlined
             class="q-mb-md"
+            :error="!!passwordError"
+            :error-message="passwordError"
+            @blur="validatePassword"
+            @update:model-value="passwordError = ''"
+            :disable="loading"
           />
 
           <!-- Forgot Password Link -->
@@ -26,7 +43,14 @@
           </div>
 
           <!-- Login Button -->
-          <q-btn label="Login" color="primary" type="submit" class="full-width" />
+          <q-btn
+            label="Login"
+            color="primary"
+            type="submit"
+            class="full-width"
+            :loading="loading"
+            :disable="loading"
+          />
 
           <!-- Divider (only show if OAuth is available) -->
           <div v-if="hasOAuthProviders" class="text-center q-my-md">
@@ -87,7 +111,10 @@ import AuthService from 'src/services/auth.service'
 const authStore = useAuthStore()
 const email = ref('')
 const password = ref('')
+const emailError = ref('')
+const passwordError = ref('')
 const errorMessage = ref('')
+const loading = ref(false)
 const googleLoading = ref(false)
 const microsoftLoading = ref(false)
 
@@ -104,10 +131,58 @@ const hasOAuthProviders = computed(() => {
   return hasGoogleProvider.value || hasMicrosoftProvider.value
 })
 
-// Placeholder login function
+// Email validation function
+function validateEmail() {
+  if (!email.value) {
+    emailError.value = 'Email is required'
+    return false
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email.value)) {
+    emailError.value = 'Please enter a valid email address'
+    return false
+  }
+
+  emailError.value = ''
+  return true
+}
+
+// Password validation function
+function validatePassword() {
+  if (!password.value) {
+    passwordError.value = 'Password is required'
+    return false
+  }
+
+  passwordError.value = ''
+  return true
+}
+
+// Validate all fields
+function validateForm() {
+  const isEmailValid = validateEmail()
+  const isPasswordValid = validatePassword()
+  return isEmailValid && isPasswordValid
+}
+
+// Login function
 async function onSubmit() {
-  // Implement actual login logic here
-  await authStore.login({ email: email.value, password: password.value })
+  errorMessage.value = ''
+
+  if (!validateForm()) {
+    return
+  }
+
+  loading.value = true
+
+  try {
+    await authStore.login({ email: email.value, password: password.value })
+  } catch (error) {
+    errorMessage.value = error.message || 'Login failed. Please try again.'
+  } finally {
+    loading.value = false
+  }
 }
 
 async function signInWithGoogle() {
